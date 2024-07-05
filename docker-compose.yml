@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  mysql:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: projet_db
+      MYSQL_USER: projetuser
+      MYSQL_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - projet-network
+    ports:
+      - "3307:3306"
+
+  backend:
+    build: ./back
+    depends_on:
+      - mysql
+    networks:
+      - projet-network
+    environment:
+      MYSQL_PASSWORD: root
+    ports:
+      - "3001:3000"
+
+  frontend:
+    build: ./front
+    depends_on:
+      - backend
+    networks:
+      - projet-network
+    ports:
+      - "81:80"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin 
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - projet-network
+    ports:
+      - "8080:80"
+
+networks:
+  projet-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
